@@ -168,7 +168,9 @@ def convert_to_cpp_headers(spacesystem : Y.System | Y.Subsystem) -> None:
     """
 
     # Every subsystem outputs to a separate file
-    for system in [spacesystem, *spacesystem.subsystems]:
+    # for system in [spacesystem, *spacesystem.subsystems]:
+    for system in [*spacesystem.subsystems]:
+        print(f"Converting system: {system.name} to C++ headers and structs")
         system_cpp_representation = SystemCppRepresentation()
         system_cpp_representation.includes = "#include <stdint.h>\n\n"
         system_cpp_representation.filename = system.name.replace(" ", "_") + "_containerdef.h"        

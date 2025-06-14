@@ -8,6 +8,7 @@ class SystemCppRepresentation:
         self.filename = ""
         self.includes = ""
         self.system_globals = ""
+        self.system_globals_list = []
         self.structs_definitions = ""
 
     def dumps(self):
@@ -59,7 +60,24 @@ def convert_parameter_entry_to_cpp_struct(
     """
     indent = "    "
     cpp_struct_param_string = f"{indent}"
-    if isinstance(entry.parameter, Y.BooleanParameter):
+    if isinstance(entry.parameter, Y.AggregateParameter):
+        # parameter_name = entry.parameter.name.replace(" ", "_")
+        # aggregate_string = f"struct {parameter_name} {{\n"
+        # for aggregate_member in entry.parameter.members:
+        #     aggregate_string += convert_parameter_entry_to_cpp_struct(
+        #         Y.ParameterEntry(aggregate_member),
+        #         system_name,
+        #         system_cpp_representation
+        #     )
+        # aggregate_string += f"}};\n\n\n"
+        # aggregate_name = parameter_name
+        # if aggregate_name not in system_cpp_representation.system_globals_list:
+        #     system_cpp_representation.system_globals_list.append(aggregate_name)
+        #     system_cpp_representation.system_globals += aggregate_string
+        # cpp_struct_param_string += f"{aggregate_name} m{parameter_name};\n"
+        cpp_struct_param_string += f"// AggregateParameter: {entry.parameter.name} not yet handled\n"
+
+    elif isinstance(entry.parameter, Y.BooleanParameter):
         bits = entry.parameter.encoding.bits
         bit_field = ""
         if bits < 8:
@@ -104,6 +122,18 @@ def convert_parameter_entry_to_cpp_struct(
             cpp_struct_param_string += f"{struct_member_enum_type_name} m{parameter_name}{bit_field};\n"
         else:
             raise Exception(f"Entry: {entry.parameter.name}, system: {entry.parameter.system.name} encoding: {entry.parameter.encoding} is not supported")
+    elif isinstance(entry.parameter, Y.FloatParameter) or isinstance(entry.parameter, Y.FloatMember):
+        bits = entry.parameter.encoding.bits
+        parameter_name = entry.parameter.name.replace(" ", "_")
+        type_str = ''
+        match bits:
+            case 32:
+                type_str = 'float'
+            case 64:
+                type_str = 'double'
+            case _:
+                raise Exception(f"{bits} bit float is not supported")
+        cpp_struct_param_string += f"{type_str} {parameter_name};\n"
     elif isinstance(entry.parameter, Y.IntegerParameter):
         is_unsigned = (entry.parameter.encoding.scheme == Y.IntegerEncodingScheme.UNSIGNED)
         bits = entry.parameter.encoding.bits
